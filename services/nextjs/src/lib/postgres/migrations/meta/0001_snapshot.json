@@ -1,0 +1,50 @@
+{
+  "id": "3e94ddc2-95d4-4d79-94a0-4eae66a8f71e",
+  "prevId": "817786c2-55c0-46da-80c0-2eeb941bd6a2",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.activity": {
+      "name": "activity",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "recent_activity": {
+          "name": "recent_activity",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "no_recent_activity": {
+          "name": "no_recent_activity",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

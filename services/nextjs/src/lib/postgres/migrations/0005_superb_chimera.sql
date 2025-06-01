@@ -1,0 +1,1 @@
+ALTER TABLE "history" RENAME COLUMN "form_submittion" TO "form_submission";

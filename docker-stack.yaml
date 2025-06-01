@@ -1,0 +1,93 @@
+networks:
+  network-iproact:
+    external: true
+
+volumes:
+  postgres:
+  n8n:
+
+secrets:
+  IPROACT_POSTGRES_DB:
+    external: true
+  IPROACT_POSTGRES_USER:
+    external: true
+  IPROACT_POSTGRES_PASSWORD:
+    external: true
+  IPROACT_POSTGRES_URL:
+    external: true
+
+services:
+  dozzle:
+    image: amir20/dozzle
+    networks:
+      - network-iproact
+    environment:
+      - DOZZLE_NO_ANALYTICS=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - '8080:8080'
+
+  postgres:
+    image: image-postgres
+    networks:
+      - network-iproact
+    secrets:
+      - IPROACT_POSTGRES_DB
+      - IPROACT_POSTGRES_USER
+      - IPROACT_POSTGRES_PASSWORD
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB_FILE: /run/secrets/IPROACT_POSTGRES_DB
+      POSTGRES_USER_FILE: /run/secrets/IPROACT_POSTGRES_USER
+      POSTGRES_PASSWORD_FILE: /run/secrets/IPROACT_POSTGRES_PASSWORD
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+  pgweb:
+    image: sosedoff/pgweb
+    networks:
+      - network-iproact
+    secrets:
+      - IPROACT_POSTGRES_URL
+    entrypoint: ['/bin/sh']
+    command:
+      - -c
+      - 'pgweb --url "$$(cat /run/secrets/IPROACT_POSTGRES_URL)?sslmode=disable" --bind 0.0.0.0 --listen 8081'
+    ports:
+      - '8081:8081'
+
+  n8n:
+    image: image-iproact-n8n
+    networks:
+      - network-iproact
+    secrets:
+      - IPROACT_POSTGRES_DB
+      - IPROACT_POSTGRES_USER
+      - IPROACT_POSTGRES_PASSWORD
+    environment:
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: 'true'
+      N8N_RUNNERS_ENABLED: 'true'
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE_FILE: /run/secrets/IPROACT_POSTGRES_DB
+      DB_POSTGRESDB_USER_FILE: /run/secrets/IPROACT_POSTGRES_USER
+      DB_POSTGRESDB_PASSWORD_FILE: /run/secrets/IPROACT_POSTGRES_PASSWORD
+      DB_POSTGRESDB_SCHEMA: n8n
+    volumes:
+      - n8n:/home/node/.n8n
+    ports:
+      - '5678:5678'
+
+  nextjs:
+    image: image-iproact-nextjs
+    networks:
+      - network-iproact
+    secrets:
+      - IPROACT_POSTGRES_URL
+    ports:
+      - '3000:3000'
