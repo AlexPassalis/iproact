@@ -1,7 +1,7 @@
 import { postgres } from '@/lib/postgres'
 import { history, activity, output } from '@/lib/postgres/schema'
 import { NextResponse } from 'next/server'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, or } from 'drizzle-orm'
 import axios from 'axios'
 import { envServer } from '@/data/env/envServer'
 
@@ -13,13 +13,13 @@ export async function DELETE() {
       .orderBy(desc(history.form_submission))
       .limit(1)
 
-    const firstResolved = await Promise.all([
-      postgres
-        .delete(history)
-        .where(eq(history.form_submission, historyRow.form_submission)),
+    const resolved = await Promise.all([
       axios.delete(
         `${envServer.N8N_WEBHOOK_URL}/submit?form_submission=${historyRow.form_submission}`,
       ),
+      postgres
+        .delete(history)
+        .where(eq(history.form_submission, historyRow.form_submission)),
       postgres
         .select()
         .from(activity)
@@ -30,10 +30,20 @@ export async function DELETE() {
         )
         .orderBy(desc(activity.id))
         .limit(1),
+      postgres
+        .select()
+        .from(output)
+        .where(
+          or(
+            eq(output.ipa, historyRow.output),
+            eq(output.placebo, historyRow.output),
+          ),
+        )
+        .orderBy(desc(output.id))
+        .limit(1),
     ])
 
-    const activityRow = firstResolved[2][0]
-    const secondResolved = await Promise.all([
+    await Promise.all([
       postgres
         .update(activity)
         .set(
@@ -41,36 +51,16 @@ export async function DELETE() {
             ? { recent_activity_used: false }
             : { no_recent_activity_used: false },
         )
-        .where(eq(activity.id, activityRow.id)),
+        .where(eq(activity.id, resolved[2][0].id)),
       postgres
-        .select()
-        .from(output)
-        .where(
-          historyRow.input === 'Recent activity'
-            ? activityRow.recent_activity === 'IPA'
-              ? eq(output.ipa_used, true)
-              : eq(output.placebo_used, true)
-            : activityRow.no_recent_activity === 'IPA'
-            ? eq(output.ipa_used, true)
-            : eq(output.placebo_used, true),
-        )
-        .orderBy(desc(output.id))
-        .limit(1),
-    ])
-
-    const outputRow = secondResolved[1][0]
-    await postgres
-      .update(output)
-      .set(
-        historyRow.input === 'Recent activity'
-          ? activityRow.recent_activity === 'IPA'
+        .update(output)
+        .set(
+          historyRow.output === resolved[3][0].ipa
             ? { ipa_used: false }
-            : { placebo_used: false }
-          : activityRow.no_recent_activity === 'IPA'
-          ? { ipa_used: false }
-          : { placebo_used: false },
-      )
-      .where(eq(output.id, outputRow.id))
+            : { placebo_used: false },
+        )
+        .where(eq(output.id, resolved[3][0].id)),
+    ])
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: error }, { status: 500 })
