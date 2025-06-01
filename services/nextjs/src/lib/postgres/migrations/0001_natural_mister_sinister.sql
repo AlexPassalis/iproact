@@ -1,1 +1,0 @@
-ALTER TABLE "activity" ADD COLUMN "no_recent_activity" jsonb NOT NULL;

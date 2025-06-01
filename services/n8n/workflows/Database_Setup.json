@@ -54,7 +54,7 @@
       "name": "Sheet1",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "80DFCtFuXtY7w6ff",
+          "id": "7LXW4DNaRZzd2HGN",
           "name": "Google Sheets account"
         }
       }
@@ -88,7 +88,7 @@
       "name": "Sheet2",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "80DFCtFuXtY7w6ff",
+          "id": "7LXW4DNaRZzd2HGN",
           "name": "Google Sheets account"
         }
       }
@@ -110,214 +110,7 @@
       "executeOnce": true
     }
   ],
-  "pinData": {
-    "On form submission": [
-      {
-        "json": {
-          "Document ID": "1EkPD0AAB912iOVcqZhVTpfyoaHLT9_4-ZKlizY65tRc",
-          "Sheet1 ID": "0",
-          "Sheet2 ID": "1235458535",
-          "submittedAt": "2025-06-01T07:37:16.053-04:00",
-          "formMode": "test"
-        }
-      }
-    ],
-    "Sheet1": [
-      {
-        "json": {
-          "row_number": 2,
-          "Recent activity": "IPA",
-          "No recent activity": "Placebo"
-        }
-      },
-      {
-        "json": {
-          "row_number": 3,
-          "Recent activity": "IPA",
-          "No recent activity": "IPA"
-        }
-      },
-      {
-        "json": {
-          "row_number": 4,
-          "Recent activity": "Placebo",
-          "No recent activity": "Placebo"
-        }
-      },
-      {
-        "json": {
-          "row_number": 5,
-          "Recent activity": "Placebo",
-          "No recent activity": "IPA"
-        }
-      },
-      {
-        "json": {
-          "row_number": 6,
-          "Recent activity": "IPA",
-          "No recent activity": "IPA"
-        }
-      },
-      {
-        "json": {
-          "row_number": 7,
-          "Recent activity": "Placebo",
-          "No recent activity": "Placebo"
-        }
-      }
-    ],
-    "Merge": [
-      {
-        "json": {
-          "row_number": 2,
-          "Recent activity": "IPA",
-          "No recent activity": "Placebo"
-        }
-      },
-      {
-        "json": {
-          "row_number": 3,
-          "Recent activity": "IPA",
-          "No recent activity": "IPA"
-        }
-      },
-      {
-        "json": {
-          "row_number": 4,
-          "Recent activity": "Placebo",
-          "No recent activity": "Placebo"
-        }
-      },
-      {
-        "json": {
-          "row_number": 5,
-          "Recent activity": "Placebo",
-          "No recent activity": "IPA"
-        }
-      },
-      {
-        "json": {
-          "row_number": 6,
-          "Recent activity": "IPA",
-          "No recent activity": "IPA"
-        }
-      },
-      {
-        "json": {
-          "row_number": 7,
-          "Recent activity": "Placebo",
-          "No recent activity": "Placebo"
-        }
-      },
-      {
-        "json": {
-          "row_number": 2,
-          "IPA": 1,
-          "Placebo": 2
-        }
-      },
-      {
-        "json": {
-          "row_number": 3,
-          "IPA": 3,
-          "Placebo": 5
-        }
-      },
-      {
-        "json": {
-          "row_number": 4,
-          "IPA": 4,
-          "Placebo": 6
-        }
-      },
-      {
-        "json": {
-          "row_number": 5,
-          "IPA": 8,
-          "Placebo": 7
-        }
-      },
-      {
-        "json": {
-          "row_number": 6,
-          "IPA": 9,
-          "Placebo": 10
-        }
-      },
-      {
-        "json": {
-          "row_number": 7,
-          "IPA": 11,
-          "Placebo": 13
-        }
-      },
-      {
-        "json": {
-          "row_number": 8,
-          "IPA": 12,
-          "Placebo": 14
-        }
-      }
-    ],
-    "Sheet2": [
-      {
-        "json": {
-          "row_number": 2,
-          "IPA": 1,
-          "Placebo": 2
-        }
-      },
-      {
-        "json": {
-          "row_number": 3,
-          "IPA": 3,
-          "Placebo": 5
-        }
-      },
-      {
-        "json": {
-          "row_number": 4,
-          "IPA": 4,
-          "Placebo": 6
-        }
-      },
-      {
-        "json": {
-          "row_number": 5,
-          "IPA": 8,
-          "Placebo": 7
-        }
-      },
-      {
-        "json": {
-          "row_number": 6,
-          "IPA": 9,
-          "Placebo": 10
-        }
-      },
-      {
-        "json": {
-          "row_number": 7,
-          "IPA": 11,
-          "Placebo": 13
-        }
-      },
-      {
-        "json": {
-          "row_number": 8,
-          "IPA": 12,
-          "Placebo": 14
-        }
-      }
-    ],
-    "DB setup": [
-      {
-        "json": {
-          "message": "setup completed successfully"
-        }
-      }
-    ]
-  },
+  "pinData": {},
   "connections": {
     "On form submission": {
       "main": [
@@ -373,10 +166,10 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "6b27921a-a28a-40a2-9488-3747c040ba01",
+  "versionId": "99326c55-e5b3-43fc-8b0c-bf619420a594",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "7cfd6155ade22475ca726e828b9372d104e1584f253d2cb105f11c79e03e219e"
+    "instanceId": "75f113c039304f7b757ed2e2eab666d337617e0595ff0202a5bfac74fba38cdf"
   },
   "id": "e4kQ0Kd9aExPTpbn",
   "tags": []

@@ -4,20 +4,14 @@
     {
       "parameters": {
         "multipleMethods": true,
-        "httpMethod": [
-          "POST",
-          "DELETE"
-        ],
+        "httpMethod": ["POST", "DELETE"],
         "path": "submit",
         "responseMode": "lastNode",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [
-        20,
-        0
-      ],
+      "position": [20, 0],
       "id": "e9bde060-c67b-4d3c-a2c1-a74693113e25",
       "name": "Webhook",
       "webhookId": "13b33b90-1b43-44fe-a917-446920f6846e"
@@ -46,9 +40,7 @@
             "output": "={{ $json.body.output }}",
             "form_submission": "={{ $json.body.form_submission }}"
           },
-          "matchingColumns": [
-            "row_number"
-          ],
+          "matchingColumns": ["row_number"],
           "schema": [
             {
               "id": "form_submission",
@@ -88,10 +80,7 @@
       },
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.6,
-      "position": [
-        260,
-        -140
-      ],
+      "position": [260, -140],
       "id": "e4efe90a-b36f-495a-8bcd-dac27544084c",
       "name": "Append",
       "credentials": {
@@ -122,10 +111,7 @@
       },
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.6,
-      "position": [
-        260,
-        100
-      ],
+      "position": [260, 100],
       "id": "7b42fff6-ab68-4532-ad0f-dbfe7f0e1d69",
       "name": "Delete",
       "credentials": {
@@ -157,9 +143,7 @@
       ]
     },
     "Append": {
-      "main": [
-        []
-      ]
+      "main": [[]]
     }
   },
   "active": false,
