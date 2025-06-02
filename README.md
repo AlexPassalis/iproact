@@ -1,6 +1,8 @@
-## Simple randomizing software for the [iPROACT](https://cdn.clinicaltrials.gov/large-docs/18/NCT06674018/SAP_000.pdf) study
+### Simple randomizing software for the [iPROACT](https://cdn.clinicaltrials.gov/large-docs/18/NCT06674018/SAP_000.pdf) study
 
 _(Generates the blinded Placebo or IPA pills for the study participants.)_
+
+---
 
 ### Docker Tech Stack
 
