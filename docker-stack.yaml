@@ -29,7 +29,7 @@ services:
       - '8080:8080'
 
   postgres:
-    image: image-postgres
+    image: image-iproact-postgres
     networks:
       - network-iproact
     secrets:
