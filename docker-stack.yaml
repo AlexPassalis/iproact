@@ -4,7 +4,6 @@ networks:
 
 volumes:
   postgres:
-  n8n:
 
 secrets:
   IPROACT_POSTGRES_DB:
@@ -15,9 +14,17 @@ secrets:
     external: true
   IPROACT_POSTGRES_URL:
     external: true
+  IPROACT:
+    external: true
 
 services:
   dozzle:
+    deploy:
+      restart_policy:
+        condition: any
+      update_config:
+        order: start-first
+        failure_action: rollback
     image: amir20/dozzle
     networks:
       - network-iproact
@@ -27,8 +34,21 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
       - '8080:8080'
+    healthcheck:
+      start_period: 10s
+      start_interval: 1s
+      test: ['CMD', '/dozzle', 'healthcheck']
+      interval: 10s
+      timeout: 5s
+      retries: 2
 
   postgres:
+    deploy:
+      restart_policy:
+        condition: any
+      update_config:
+        order: start-first
+        failure_action: rollback
     image: image-iproact-postgres
     networks:
       - network-iproact
@@ -44,10 +64,25 @@ services:
       POSTGRES_PASSWORD_FILE: /run/secrets/IPROACT_POSTGRES_PASSWORD
     volumes:
       - postgres:/var/lib/postgresql/data
-    ports:
-      - '5432:5432'
+    healthcheck:
+      start_period: 10s
+      start_interval: 1s
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U $$(cat /run/secrets/IPROACT_POSTGRES_USER) -d $$(cat /run/secrets/IPROACT_POSTGRES_DB)',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 2
 
   pgweb:
+    deploy:
+      restart_policy:
+        condition: any
+      update_config:
+        order: start-first
+        failure_action: rollback
     image: sosedoff/pgweb
     networks:
       - network-iproact
@@ -59,35 +94,37 @@ services:
       - 'pgweb --url "$$(cat /run/secrets/IPROACT_POSTGRES_URL)?sslmode=disable" --bind 0.0.0.0 --listen 8081'
     ports:
       - '8081:8081'
-
-  n8n:
-    image: image-iproact-n8n
-    networks:
-      - network-iproact
-    secrets:
-      - IPROACT_POSTGRES_DB
-      - IPROACT_POSTGRES_USER
-      - IPROACT_POSTGRES_PASSWORD
-    environment:
-      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: 'true'
-      N8N_RUNNERS_ENABLED: 'true'
-      DB_TYPE: postgresdb
-      DB_POSTGRESDB_HOST: postgres
-      DB_POSTGRESDB_PORT: 5432
-      DB_POSTGRESDB_DATABASE_FILE: /run/secrets/IPROACT_POSTGRES_DB
-      DB_POSTGRESDB_USER_FILE: /run/secrets/IPROACT_POSTGRES_USER
-      DB_POSTGRESDB_PASSWORD_FILE: /run/secrets/IPROACT_POSTGRES_PASSWORD
-      DB_POSTGRESDB_SCHEMA: n8n
-    volumes:
-      - n8n:/home/node/.n8n
-    ports:
-      - '5678:5678'
+    healthcheck:
+      start_period: 10s
+      start_interval: 1s
+      test: ['CMD', 'nc', '-vz', '127.0.0.1', '8081']
+      interval: 10s
+      timeout: 5s
+      retries: 2
 
   nextjs:
+    deploy:
+      restart_policy:
+        condition: any
+      update_config:
+        order: start-first
+        failure_action: rollback
     image: image-iproact-nextjs
     networks:
       - network-iproact
     secrets:
       - IPROACT_POSTGRES_URL
+      - IPROACT
     ports:
-      - '3000:3000'
+      - '80:3000'
+    healthcheck:
+      start_period: 10s
+      start_interval: 1s
+      test:
+        [
+          'CMD-SHELL',
+          'curl -f http://localhost:3000/api/health | grep ok || exit 1',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 2

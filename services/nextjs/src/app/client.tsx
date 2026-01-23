@@ -1,6 +1,6 @@
 'use client'
 
-import type { typeHistory, typeInputValue } from '@/lib/postgres/data/type'
+import type { typeOutput, typeInputValue } from '@/lib/postgres/data/type'
 
 import { zodResolver } from 'mantine-form-zod-resolver'
 import { z } from 'zod'
@@ -11,11 +11,11 @@ import axios from 'axios'
 import { useState } from 'react'
 
 type HomeClientProps = {
-  postgres_history: typeHistory
+  postgres_output: typeOutput
 }
 
-export function HomeClient({ postgres_history }: HomeClientProps) {
-  const [history, setHistory] = useState(postgres_history)
+export function HomeClient({ postgres_output }: HomeClientProps) {
+  const [outputs, setOutputs] = useState(postgres_output)
   const [loading, setLoading] = useState(false)
 
   const form = useForm({
@@ -36,19 +36,19 @@ export function HomeClient({ postgres_history }: HomeClientProps) {
         onSubmit={form.onSubmit(async (values) => {
           try {
             setLoading(true)
-            const res = await axios.post('http://localhost:3000/api/submit', {
+            const res = await axios.post('/api/submit', {
               input: values.input,
-              form_submission: history.length + 1,
+              form_submission: outputs.length + 1,
             })
-            const output = res.data.output as number
-            if (output === 0) {
+            const allocation = res.data.allocation as number
+            if (allocation === 0) {
               alert('No more rows left')
             } else {
-              setHistory((prev) => [
+              setOutputs((prev) => [
                 {
-                  form_submission: history.length + 1,
+                  form_submission: outputs.length + 1,
                   input: values.input,
-                  output: output,
+                  allocation: allocation,
                 },
                 ...prev,
               ])
@@ -63,8 +63,8 @@ export function HomeClient({ postgres_history }: HomeClientProps) {
         className="my-10 p-2 border border-[var(--mantine-border)] rounded-lg"
       >
         <NumberInput
-          label="Last output"
-          value={history[0]?.output ?? ''}
+          label="Last allocation"
+          value={outputs[0]?.allocation ?? ''}
           size="xl"
           classNames={{
             label: '!w-full !text-center',
@@ -106,14 +106,14 @@ export function HomeClient({ postgres_history }: HomeClientProps) {
       <div className="flex">
         <div className="mr-10 border border-black rounded-lg max-h-72 overflow-y-auto">
           <h1 className="py-1 text-xl w-full text-center border-b border-black">
-            History
+            Output
           </h1>
           <div className="flex">
             <div className="flex flex-col items-center">
               <h2 className="w-full text-center px-2 border-b border-black">
                 form_submission
               </h2>
-              {history.map((item, index, array) => (
+              {outputs.map((item, index, array) => (
                 <p
                   key={index}
                   className={`px-2 py-1 w-full text-center ${
@@ -130,7 +130,7 @@ export function HomeClient({ postgres_history }: HomeClientProps) {
               <h2 className="w-full text-center px-2 border-b border-black">
                 input
               </h2>
-              {history.map((item, index, array) => (
+              {outputs.map((item, index, array) => (
                 <p
                   key={index}
                   className={`px-2 py-1 w-full text-center ${
@@ -145,9 +145,9 @@ export function HomeClient({ postgres_history }: HomeClientProps) {
             </div>
             <div className="flex flex-col items-center">
               <h2 className="w-full text-center px-2 border-r border-b border-black">
-                output
+                allocation
               </h2>
-              {history.map((item, index, array) => (
+              {outputs.map((item, index, array) => (
                 <p
                   key={index}
                   className={`px-2 py-1 w-full text-center border-r ${
@@ -156,18 +156,18 @@ export function HomeClient({ postgres_history }: HomeClientProps) {
                       : ''
                   }`}
                 >
-                  {item.output}
+                  {item.allocation}
                 </p>
               ))}
             </div>
 
-            {history.length > 0 && (
+            {outputs.length > 0 && (
               <Button
                 onClick={async () => {
                   try {
                     setLoading(true)
-                    await axios.delete('http://localhost:3000/api/undo')
-                    setHistory((prev) => prev.slice(1))
+                    await axios.delete('/api/undo')
+                    setOutputs((prev) => prev.slice(1))
                   } catch (error) {
                     console.error(error)
                     alert(
@@ -193,14 +193,14 @@ export function HomeClient({ postgres_history }: HomeClientProps) {
         <div className="flex flex-col justify-center gap-4 p-2 border border-black rounded-lg">
           <NumberInput
             label="Form submissions"
-            value={history.length}
+            value={outputs.length}
             size="md"
             hideControls
           />
           <NumberInput
             label="Recent activity"
             value={
-              history.filter((item) => item.input === 'Recent activity').length
+              outputs.filter((item) => item.input === 'Recent activity').length
             }
             size="md"
             hideControls
@@ -208,7 +208,7 @@ export function HomeClient({ postgres_history }: HomeClientProps) {
           <NumberInput
             label="No recent activity"
             value={
-              history.filter((item) => item.input === 'No recent activity')
+              outputs.filter((item) => item.input === 'No recent activity')
                 .length
             }
             size="md"

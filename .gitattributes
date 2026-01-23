@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+secrets/** filter=git-crypt diff=git-crypt
+services/nextjs/src/app/iProact.ts filter=git-crypt diff=git-crypt

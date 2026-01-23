@@ -4,116 +4,117 @@ _(Generates the blinded Placebo or IPA pills for the study participants.)_
 
 ---
 
-### Docker Tech Stack
+### Tech Stack
 
-- Postgres for the database (https://www.postgresql.org/)
-- Next.js for the fullstack application (https://nextjs.org/)
-- n8n for the data import and external history backup (https://n8n.io/)
+- [PostgreSQL](https://www.postgresql.org/) for the database
+- [Next.js](https://nextjs.org/) for the fullstack application
+- [Docker Swarm](https://docs.docker.com/engine/swarm/) for deployment
 
 ---
 
-### Instructions
+### Docker Secrets
 
-1. Install Docker Desktop (https://www.docker.com/products/docker-desktop/).
+Before deploying, create the following 4 Docker secrets. Use [this tool](https://www.rfctools.com/postgresql-password-generator/) to generate the password.
+
+| Secret Name | Description | Example |
+|---|---|---|
+| `IPROACT_POSTGRES_USER` | PostgreSQL username | `iproact_user` |
+| `IPROACT_POSTGRES_PASSWORD` | PostgreSQL password | `oF4-h_jSxlM9Ujqg4G-g` |
+| `IPROACT_POSTGRES_DB` | PostgreSQL database name | `iproact_db` |
+| `IPROACT_POSTGRES_URL` | Full connection string | `postgres://<USER>:<PASSWORD>@postgres:5432/<DB>` |
+
+Create each secret with:
+
+```bash
+printf '<value>' | docker secret create <SECRET_NAME> -
+```
+
+---
+
+### Setup Instructions
+
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 2. Run `docker swarm init` to initialize Docker Swarm Mode.
-3. Create the 4 Docker secrets required (use the secrets folder as inspiration). Use (https://www.rfctools.com/postgresql-password-generator/) for the password.
-4. Run the `make docker` commands one-by-one in the command line (Make is probably not installed).
-5. Run db migrations.
-6. Setup Google OAuth2 for the Sheets API (https://docs.n8n.io/integrations/builtin/credentials/google/oauth-single-service/).
-7. Create Google Sheets documents (see "Google Sheets Setup" section below).
-8. Setup db using the "Database Setup" n8n workflow (http://localhost:5678/) - see "Database Setup Workflow" section below.
-9. Configure the "Webhook" workflow with correct Google Sheets credentials and Document ID for the history sheet.
-10. Test the setup (http://localhost:3000).
-11. Clean up the db using the raw SQL in pgweb.
-12. Remove the docker stack.
-13. Remove pgweb from the docker-stack.yaml file.
-14. Delete the pgweb Docker Image.
-15. Re-start the docker stack.
+3. Create the Docker overlay network: `docker network create -d overlay network-iproact`.
+4. Create the 4 Docker secrets (see section above).
+5. Prepare the CSV seed data (see "Seed Data" section below).
+6. Deploy the stack: `make start`.
+7. Run database migrations: `docker exec -it <nextjs_container> npm run migrate`.
+8. Seed the database: `docker exec -it <nextjs_container> npm run seed_db`.
+9. Test the setup at http://localhost:3000.
 
 ---
 
-### Google Sheets Setup
+### Seed Data
 
-You need **two** Google Sheets documents:
+The database is seeded from two CSV files located in `services/nextjs/src/scripts/`:
 
-#### 1. Setup Document (for seeding the database)
+**activity.csv** - Randomization assignments per activity stratum:
 
-This document has **two sheets** and is used once during initial setup.
-
-**Sheet1** (Randomization Assignments) - columns must be named exactly:
 | Recent activity | No recent activity |
-|-----------------|-------------------|
-| IPA             | Placebo           |
-| Placebo         | IPA               |
-| IPA             | IPA               |
-| Placebo         | Placebo           |
-| ...             | ...               |
+|---|---|
+| IPA | Placebo |
+| Placebo | IPA |
+| ... | ... |
 
 - Values must be exactly `IPA` or `Placebo`
 - Each row is a pre-determined randomization assignment
 - Create as many rows as expected participants per stratum
-- When a participant joins, the system uses the next unused row based on their activity status
 
-**Sheet2** (Blinded Pill Numbers) - columns must be named exactly:
-| IPA  | Placebo |
-|------|---------|
-| 1001 | 2001    |
-| 1002 | 2002    |
-| 1003 | 2003    |
-| ...  | ...     |
+**allocation.csv** - Blinded pill numbers:
 
-- Values must be **numbers** (pill identifiers from pharmacy)
+| IPA | Placebo |
+|---|---|
+| 1001 | 2001 |
+| 1002 | 2002 |
+| ... | ... |
+
+- Values must be numbers (pill identifiers from pharmacy)
 - These are the blinded identifiers on the actual pill bottles
 - Create as many rows as expected participants per treatment arm
 
-#### 2. History Document (for external backup)
-
-Create a **separate** Google Sheets document for backup. This document is **written to** by the Webhook workflow as participants are randomized.
-
-**Sheet1** (History) - columns must be named exactly:
-| form_submission | input              | output |
-|-----------------|--------------------|--------|
-| 1               | Recent activity    | 1001   |
-| 2               | No recent activity | 2001   |
-| ...             | ...                | ...    |
-
-- **form_submission**: The participant's form submission number
-- **input**: The participant's activity status (`Recent activity` or `No recent activity`)
-- **output**: The blinded pill number assigned
-
-Leave the sheet empty (only headers) - the system will automatically append rows.
-
-**Configure the Webhook workflow:**
-1. Open n8n at http://localhost:5678/
-2. Open the Webhook workflow
-3. Click on the "Append" and "Delete" nodes
-4. Update the **Document ID** to your history sheet's Document ID
-5. Ensure Google Sheets credentials are configured
-
 ---
 
-### Database Setup Workflow
+### Database Scripts
 
-1. Open n8n at http://localhost:5678/
-2. Import the workflow from `services/n8n/workflows/Database_Setup.json`
-3. Configure Google Sheets credentials
-4. Run the workflow - it will prompt for:
-   - **Document ID**: The long string in the Google Sheets URL between `/d/` and `/edit`
-     ```
-     https://docs.google.com/spreadsheets/d/1HzN9oLPyGfoyvmqRvtwo96rzojp01hKqH9m1KaN-qFo/edit
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     ```
-   - **Sheet1 ID**: The `gid` value when Sheet1 tab is selected (usually `0`)
-   - **Sheet2 ID**: The `gid` value when Sheet2 tab is selected (e.g., `976210966`)
-5. The workflow reads both sheets and seeds the database with the randomization data
+Run these inside the Next.js container (`docker exec -it <container> <command>`):
+
+| Command | Description |
+|---|---|
+| `npm run migrate` | Push the schema to the database |
+| `npm run seed_db` | Seed the database from the CSV files |
+| `npm run reset_db` | Reset usage flags and clear output (keeps seed data) |
 
 ---
 
 ### How Randomization Works
 
 1. Participant submits form with activity status ("Recent activity" or "No recent activity")
-2. System finds next unused row in the activity table matching their status
+2. System finds the next unused row in the `activity` table matching their status
 3. Gets treatment assignment (IPA or Placebo) from that row
-4. Finds next unused row in the output table for that treatment
+4. Finds the next unused row in the `allocation` table for that treatment
 5. Returns the blinded pill number (participant/staff only see the number, not the treatment)
-6. Records the assignment in the database and backs up to the history Google Sheet
+6. Records the assignment in the `output` table
+
+---
+
+### Development
+
+Use the development overlay for hot-reload:
+
+```bash
+make start_dev
+```
+
+This mounts the source code into the container for live reloading.
+
+---
+
+### Services
+
+| Service | Port | Description |
+|---|---|---|
+| Next.js | 3000 | Application |
+| PostgreSQL | 5432 | Database |
+| pgweb | 8081 | Database admin UI |
+| Dozzle | 8080 | Docker log viewer |

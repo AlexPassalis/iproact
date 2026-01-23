@@ -30,7 +30,9 @@
     COPY --from=deps /app/deps/node_modules ./node_modules
     COPY ./drizzle.config.ts ./
     COPY ./src/utils/readSecret.ts ./src/utils/
+    COPY ./src/data/env/envServer.ts ./src/data/env/
     COPY ./src/lib/postgres/ ./src/lib/postgres/
+    COPY ./src/scripts/ ./src/scripts/
 
     WORKDIR /app/build
     COPY . .

@@ -20,7 +20,7 @@ export const activity = pgTable('activity', {
     .default(false),
 })
 
-export const output = pgTable('output', {
+export const allocation = pgTable('allocation', {
   id: serial('id').primaryKey(),
   ipa: text('ipa').$type<typeOutputValue>().notNull(),
   ipa_used: boolean('ipa_used').notNull().default(false),
@@ -28,8 +28,8 @@ export const output = pgTable('output', {
   placebo_used: boolean('placebo_used').notNull().default(false),
 })
 
-export const history = pgTable('history', {
+export const output = pgTable('output', {
   form_submission: integer('form_submission').primaryKey(),
   input: text('input').$type<typeInputValue>().notNull(),
-  output: text('output').$type<typeOutputValue>().notNull(),
+  allocation: text('allocation').$type<typeOutputValue>().notNull(),
 })

@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { zodInputValue } from '@/lib/postgres/data/zod'
 import { postgres } from '@/lib/postgres'
-import { activity, history, output } from '@/lib/postgres/schema'
+import { activity, output, allocation } from '@/lib/postgres/schema'
 import { eq } from 'drizzle-orm'
-import axios from 'axios'
-import { envServer } from '@/data/env/envServer'
 
 export async function POST(req: NextRequest) {
   const { error, data: validatedBody } = z
@@ -52,29 +50,33 @@ export async function POST(req: NextRequest) {
           .where(eq(activity.id, array[0].id)),
         postgres
           .select()
-          .from(output)
+          .from(allocation)
           .where(
             array[0].recent_activity === 'IPA'
-              ? eq(output.ipa_used, false)
-              : eq(output.placebo_used, false),
+              ? eq(allocation.ipa_used, false)
+              : eq(allocation.placebo_used, false),
           )
-          .orderBy(output.id)
+          .orderBy(allocation.id)
           .limit(1),
       ])
 
-      response =
-        array[0].recent_activity === 'IPA'
-          ? resolved[1][0].ipa
-          : resolved[1][0].placebo
-
-      await postgres
-        .update(output)
-        .set(
+      if (resolved[1].length !== 1) {
+        response = 0
+      } else {
+        response =
           array[0].recent_activity === 'IPA'
-            ? { ipa_used: true }
-            : { placebo_used: true },
-        )
-        .where(eq(output.id, resolved[1][0].id))
+            ? resolved[1][0].ipa
+            : resolved[1][0].placebo
+
+        await postgres
+          .update(allocation)
+          .set(
+            array[0].recent_activity === 'IPA'
+              ? { ipa_used: true }
+              : { placebo_used: true },
+          )
+          .where(eq(allocation.id, resolved[1][0].id))
+      }
     }
   } catch (error) {
     console.error(error)
@@ -83,23 +85,16 @@ export async function POST(req: NextRequest) {
 
   if (response !== 0) {
     try {
-      await Promise.all([
-        postgres.insert(history).values({
-          form_submission: form_submission,
-          input: input,
-          output: response,
-        }),
-        axios.post(`${envServer.N8N_WEBHOOK_URL}/submit`, {
-          form_submission: form_submission,
-          input: input,
-          output: response,
-        }),
-      ])
+      await postgres.insert(output).values({
+        form_submission: form_submission,
+        input: input,
+        allocation: response,
+      })
     } catch (error) {
       console.error(error)
       return NextResponse.json({ error: error }, { status: 500 })
     }
   }
 
-  return NextResponse.json({ output: response }, { status: 200 })
+  return NextResponse.json({ allocation: response }, { status: 200 })
 }

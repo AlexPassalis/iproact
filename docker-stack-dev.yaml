@@ -1,0 +1,5 @@
+services:
+  nextjs:
+    volumes:
+      - ./services/nextjs:/app
+      - /app/node_modules
