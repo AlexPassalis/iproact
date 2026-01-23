@@ -12,22 +12,20 @@ _(Generates the blinded Placebo or IPA pills for the study participants.)_
 
 ---
 
-### Docker Secrets
+### Deployment Files
 
-Before deploying, create the following 4 Docker secrets. Use [this tool](https://www.rfctools.com/postgresql-password-generator/) to generate the password.
+Docker Secrets:
 
-| Secret Name | Description | Example |
-|---|---|---|
-| `IPROACT_POSTGRES_USER` | PostgreSQL username | `iproact_user` |
-| `IPROACT_POSTGRES_PASSWORD` | PostgreSQL password | `oF4-h_jSxlM9Ujqg4G-g` |
-| `IPROACT_POSTGRES_DB` | PostgreSQL database name | `iproact_db` |
-| `IPROACT_POSTGRES_URL` | Full connection string | `postgres://<USER>:<PASSWORD>@postgres:5432/<DB>` |
+- `IPROACT_POSTGRES_USER`
+- `IPROACT_POSTGRES_PASSWORD`
+- `IPROACT_POSTGRES_DB`
+- `IPROACT_POSTGRES_URL`
+- `IPROACT`
 
-Create each secret with:
+CSV Files:
 
-```bash
-printf '<value>' | docker secret create <SECRET_NAME> -
-```
+- `activity.csv`
+- `allocation.csv`
 
 ---
 
@@ -36,12 +34,12 @@ printf '<value>' | docker secret create <SECRET_NAME> -
 1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 2. Run `docker swarm init` to initialize Docker Swarm Mode.
 3. Create the Docker overlay network: `docker network create -d overlay network-iproact`.
-4. Create the 4 Docker secrets (see section above).
+4. Create the 5 Docker secrets (see section above).
 5. Prepare the CSV seed data (see "Seed Data" section below).
 6. Deploy the stack: `make start`.
 7. Run database migrations: `docker exec -it <nextjs_container> npm run migrate`.
 8. Seed the database: `docker exec -it <nextjs_container> npm run seed_db`.
-9. Test the setup at http://localhost:3000.
+9. Test the setup at http://localhost:80.
 
 ---
 
@@ -114,7 +112,7 @@ This mounts the source code into the container for live reloading.
 
 | Service | Port | Description |
 |---|---|---|
-| Next.js | 3000 | Application |
+| Next.js | 80 | Application |
 | PostgreSQL | 5432 | Database |
 | pgweb | 8081 | Database admin UI |
 | Dozzle | 8080 | Docker log viewer |
