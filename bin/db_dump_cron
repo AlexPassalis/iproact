@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BACKUP_DIR="$SCRIPT_DIR/../backups"
+SERVICE_NAME="stack-iproact_postgres"
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+
+# Create the directory if it doesn't exist
+mkdir -p $BACKUP_DIR
+
+CONTAINER_ID=$(docker ps --filter "name=$SERVICE_NAME" --format "{{.ID}}" | head -n 1)
+if ! [ -n "$CONTAINER_ID" ]; then
+    echo "\"$SERVICE_NAME\" service is not running."
+    exit 1
+fi
+echo "Creating backup from container: $CONTAINER_ID"
+
+# Get database credentials from secrets
+DB_NAME=$(docker exec $CONTAINER_ID cat /run/secrets/IPROACT_POSTGRES_DB 2>/dev/null || echo "iproact_db")
+DB_USER=$(docker exec $CONTAINER_ID cat /run/secrets/IPROACT_POSTGRES_USER 2>/dev/null || echo "iproact_admin")
+
+# Create backup - dump entire database with all schemas
+docker exec $CONTAINER_ID pg_dump -U $DB_USER -d $DB_NAME --clean --if-exists | \
+    gzip > $BACKUP_DIR/iproact_${TIMESTAMP}.sql.gz
+
+if [ $? -eq 0 ]; then
+    echo "Backup created successfully: $BACKUP_DIR/iproact_${TIMESTAMP}.sql.gz"
+
+    # Create/update symlink to latest backup
+    ln -sf $BACKUP_DIR/iproact_${TIMESTAMP}.sql.gz $BACKUP_DIR/iproact_latest.sql.gz
+    echo "Updated symlink: iproact_latest.sql.gz -> iproact_${TIMESTAMP}.sql.gz"
+
+    # Keep only the latest 24 backups (excluding symlink)
+    cd $BACKUP_DIR
+    ls -t iproact_*.sql.gz | grep -v 'iproact_latest.sql.gz' | tail -n +25 | xargs -r rm
+
+    echo "Current backups:"
+    ls -lh iproact_*.sql.gz
+else
+    echo "Backup failed"
+    exit 1
+fi
