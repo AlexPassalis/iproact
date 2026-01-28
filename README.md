@@ -116,3 +116,42 @@ This mounts the source code into the container for live reloading.
 | PostgreSQL | 5432 | Database |
 | pgweb | 8081 | Database admin UI |
 | Dozzle | 8080 | Docker log viewer |
+
+---
+
+### Switching from Mock to Production Data
+
+1. Stop the stack:
+   ```bash
+   make stop
+   ```
+
+2. Remove the postgres volume:
+   ```bash
+   docker volume rm iproact_postgres
+   ```
+
+3. Transfer the real CSV files to the server:
+   ```bash
+   scp activity.csv allocation.csv user@server:/path/to/iproact/services/nextjs/src/scripts/
+   ```
+
+4. Start the stack:
+   ```bash
+   make start
+   ```
+
+5. Run database migrations:
+   ```bash
+   docker exec -it $(docker ps -qf "name=nextjs") npm run migrate
+   ```
+
+6. Seed the database with actual data:
+   ```bash
+   docker exec -it $(docker ps -qf "name=nextjs") npm run seed_db
+   ```
+
+7. Set up the backup cron job:
+   ```bash
+   ./bin/db_dump_cron_init
+   ```
